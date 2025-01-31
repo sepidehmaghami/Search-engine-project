@@ -214,8 +214,9 @@ def extract_comment_type(comment):
 
 def main():
     # base_url = "https://www.eghamat24.com/IranHotels.html"
-    url_manager  = URLManager()  # ایجاد نمونه از مدیریت URL
-    base_url = url_manager.get_url()  # دریافت و حذف URL از صف
+    url_manager  = URLManager()  
+    base_url = url_manager.get_url() 
+    all_hotels_data = []  
 
     with requests.Session() as session:
         session.headers.update(HEADERS)
@@ -247,11 +248,17 @@ def main():
                     response.raise_for_status()
                     
                     hotel_data = extract_hotel_data(response.text, url)
-                    print(json.dumps(hotel_data, indent=2, ensure_ascii=False, default=str))
+                    # print(json.dumps(hotel_data, indent=2, ensure_ascii=False, default=str))
+                    all_hotels_data.append(hotel_data)
                     
                 except Exception as e:
                     print(f"Error processing {url}: {str(e)}")
                 
+            with open('eghamat24.json', 'w', encoding='utf-8') as f:
+                json.dump(all_hotels_data, f, indent=2, ensure_ascii=False, default=str)
+            
+            print("Data successfully saved to hotels.json")
+
         except Exception as e:
             print(f"Main error: {str(e)}")
 
