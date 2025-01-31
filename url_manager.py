@@ -46,5 +46,5 @@ if __name__ == "__main__":
     for url in initial_urls:
         url_manager.add_url(url)
     
-    print("URLs in the queue:")    
-    url_manager.get_url()
+    # print("URLs in the queue:")    
+    # # url_manager.get_url()

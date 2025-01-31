@@ -4,6 +4,7 @@ from bs4 import BeautifulSoup
 import time
 import re
 import json
+from url_manager import URLManager
 
 def convert_persian_digits(text):
     persian_digits = '۰۱۲۳۴۵۶۷۸۹'
@@ -212,8 +213,10 @@ def extract_comment_type(comment):
     return type_tag.get_text(strip=True) if type_tag else None
 
 def main():
-    base_url = "https://www.eghamat24.com/IranHotels.html"
-    
+    # base_url = "https://www.eghamat24.com/IranHotels.html"
+    url_manager  = URLManager()  # ایجاد نمونه از مدیریت URL
+    base_url = url_manager.get_url()  # دریافت و حذف URL از صف
+
     with requests.Session() as session:
         session.headers.update(HEADERS)
         
