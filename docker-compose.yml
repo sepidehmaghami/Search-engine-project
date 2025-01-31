@@ -1,0 +1,57 @@
+version: '3.8'
+
+services:
+  elasticsearch:
+    image: elasticsearch:8.17.1
+    container_name: elasticsearch
+    environment:
+      - discovery.type=single-node
+      - ES_JAVA_OPTS=-Xms1g -Xmx1g
+      # Security settings (optional but recommended)
+      - ELASTIC_PASSWORD=changeme
+      - xpack.security.enabled=true
+    ports:
+      - "9200:9200"  # REST API
+      - "9300:9300"  # Internal cluster communication
+    volumes:
+      - esdata:/usr/share/elasticsearch/data
+    networks:
+      - app-network
+    # Optional: Restart policy
+    restart: unless-stopped
+
+  redis:
+    image: redis:latest
+    container_name: redis
+    ports:
+      - "6379:6379"
+    volumes:
+      - redisdata:/data
+    networks:
+      - app-network
+    # Optional: Restart policy
+    restart: unless-stopped
+
+  crawler:
+    build: .
+    container_name: crawler
+    volumes:
+      - ./:/app
+    networks:
+      - app-network
+    # # Optional: Restart policy
+    # restart: unless-stopped
+    depends_on:
+      - redis 
+      - elasticsearch
+    command: python utils.py
+
+volumes:
+  esdata:
+    driver: local
+  redisdata:
+    driver: local
+
+networks:
+  app-network:
+    driver: bridge

@@ -1,0 +1,31 @@
+# محیط مجازی
+venv/
+.env/
+env/
+*.venv
+
+# فایل‌های کامپایل‌شده
+__pycache__/
+*.pyc
+*.pyo
+*.pyd
+
+# تنظیمات IDE و ادیتورها
+.vscode/
+.idea/
+*.sublime-workspace
+
+# کش‌ها و فایل‌های لاگ
+*.log
+*.sqlite3
+db.sqlite3
+*.db
+
+# پوشه‌های ایجاد شده توسط ابزارهای پایتونی
+.mypy_cache/
+.pytest_cache/
+.coverage
+htmlcov/
+dist/
+build/
+*.egg-info/
