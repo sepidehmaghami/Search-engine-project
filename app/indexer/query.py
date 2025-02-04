@@ -2,12 +2,6 @@ import os
 from elasticsearch import Elasticsearch
 
 def search_hotels(es, index_name, query_text):
-    """
-    :param es: شیء اتصال به Elasticsearch
-    :param index_name: نام ایندکس (مثلاً "hotels")
-    :param query_text: عبارت جستجو
-    :return: نتایج جستجو به صورت دیکشنری
-    """
     # If the search term is empty, we use match_all
     if not query_text.strip():
         search_body = {
@@ -80,11 +74,11 @@ if __name__ == '__main__':
     )
     
     index_name = "hotels"
-    query_text = input("عبارت جستجو را وارد کنید: ")
+    query_text = input("Enter search term: ")
     
     results = search_hotels(es, index_name, query_text)
     
-    print("\nنتایج جستجو:")
+    print("\on Search results:")
     for hit in results['hits']['hits']:
         print("-" * 50)
         print(f"امتیاز: {hit['_score']}")
