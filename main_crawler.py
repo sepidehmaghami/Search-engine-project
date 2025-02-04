@@ -33,8 +33,11 @@ if __name__ == "__main__":
     site = Site(url='https://'+url, crawler=site_type)
     site.crawl(process_url)
 
+
     output_file = f'{url}.json'
     with open(output_file, 'w', encoding='utf-8') as file:
         json.dump(crawled_data, file, ensure_ascii=False)
 
     print(f"Data successfully saved to {output_file}")
+    
+    

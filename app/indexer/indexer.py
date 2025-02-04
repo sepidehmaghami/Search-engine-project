@@ -1,78 +1,86 @@
-# app/indexer/indexer.py
-
-from elasticsearch import Elasticsearch, helpers
-import json
 import os
+import sys
+import json
+from elasticsearch import Elasticsearch, helpers
 
-class HotelIndexer:
-    def __init__(self, host='localhost', port=9200, index_name='hotels'):
-        # اتصال به Elasticsearch
-        self.es = Elasticsearch([{'host': host, 'port': port}])
-        self.index_name = index_name
-        # در صورتی که ایندکس وجود ندارد، آن را ایجاد کنید.
-        if not self.es.indices.exists(index=self.index_name):
-            self.create_index()
-
-    def create_index(self):
-        settings = {
-            "settings": {
-                "number_of_shards": 1,
-                "number_of_replicas": 0
-            },
-            "mappings": {
-                "properties": {
-                    "url": {"type": "keyword"},
-                    "name": {"type": "text"},
-                    "address": {"type": "text"},
-                    "star_rating": {"type": "integer"},
-                    "rating": {"type": "float"},
-                    "reviews_count": {"type": "integer"},
-                    "rooms": {
-                        "type": "nested",
-                        "properties": {
-                            "room_name": {"type": "text"},
-                            "room_price": {"type": "integer"},
-                            "room_discount": {"type": "keyword"}
-                        }
-                    },
-                    "comments": {
-                        "type": "nested",
-                        "properties": {
-                            "username": {"type": "text"},
-                            "score": {"type": "float"},
-                            "text": {"type": "text"}
-                        }
+def create_index(es, index_name):
+    mapping = {
+        "mappings": {
+            "properties": {
+                "url": {"type": "keyword"},
+                "name": {"type": "text", "analyzer": "standard"},
+                "star_rating": {"type": "integer"},
+                "rating": {"type": "float"},
+                "reviews_count": {"type": "integer"},
+                "address": {"type": "text"},
+                "whole_room_count": {"type": "integer"},
+                "height": {"type": "keyword"},
+                "rooms": {
+                    "type": "nested",
+                    "properties": {
+                        "room_name": {"type": "text"},
+                        "room_price": {"type": "integer"},
+                        "room_discount": {"type": "keyword"}
+                    }
+                },
+                "comments": {
+                    "type": "nested",
+                    "properties": {
+                        "username": {"type": "text"},
+                        "score": {"type": "float"},
+                        "text": {"type": "text"}
                     }
                 }
             }
         }
-        self.es.indices.create(index=self.index_name, body=settings)
-        print(f"Index '{self.index_name}' created.")
+    }
+    if es.indices.exists(index=index_name):
+        es.indices.delete(index=index_name)
+    es.indices.create(index=index_name, body=mapping)
+    print(f"Index '{index_name}' created.")
 
-    def index_hotels(self, hotels):
-        """
-        hotels: لیستی از دیکشنری‌های هتل‌ها (مانند داده‌های استخراج شده توسط خزنده‌ها)
-        """
-        actions = [
-            {
-                "_index": self.index_name,
-                "_id": hotel.get('url'),
-                "_source": hotel
-            }
-            for hotel in hotels
-        ]
-        helpers.bulk(self.es, actions)
-        print("Indexing complete.")
+def index_data(es, index_name, data):
+    actions = []
+    for d in data:
+        print(json.dumps(d, indent=2, ensure_ascii=False))  # Check data before sending
+        actions.append({
+            "_index": index_name,
+            "_source": d
+        })
 
-if __name__ == '__main__':
-    # به عنوان مثال، فرض می‌کنیم فایل JSON مربوط به سایت hotelyar.com ذخیره شده است.
-    # file_name = 'hotelyar.com.json'
+    try:
+        helpers.bulk(es, actions)
+        print(f"{len(actions)} Documents have been added to index '{index_name}'.")
+    except helpers.BulkIndexError as e:
+        print("An indexing error occurred:")
+        for error in e.errors:  
+            print(json.dumps(error, indent=2, ensure_ascii=False))
+
+
+def main():
+    # json_path = os.path.join(os.path.dirname(__file__), "..", "hotelyar.com.json")
+    # json_path = os.path.join(os.path.dirname(__file__), "..", "eghamat24.com.json")
+    json_path = os.path.join(os.path.dirname(__file__), "..", "lastsecond.json")
+    if not os.path.exists(json_path):
+        print(f"JSON file not found at {json_path}.")
+        sys.exit(1)
     
-    file_name = 'eghamat24.com.json'
-    if os.path.exists(file_name):
-        with open(file_name, 'r', encoding='utf-8') as f:
-            hotels = json.load(f)
-        indexer = HotelIndexer()
-        indexer.index_hotels(hotels)
-    else:
-        print(f"File '{file_name}' not found.")
+    with open(json_path, 'r', encoding='utf-8') as f:
+        data = json.load(f)
+
+    es = Elasticsearch(
+        "https://localhost:9200",
+        basic_auth=("elastic", "Ug1o-XGw9*DaSmIQciSJ"),
+        verify_certs=False,  
+        request_timeout=30
+    )
+
+    index_name = "hotels"
+    
+    create_index(es, index_name)
+    index_data(es, index_name, data)
+    
+    print("Indexing complete.")
+
+if __name__ == "__main__":
+    main()
