@@ -1,11 +1,17 @@
-FROM python:3.12-bullseye
+FROM  python:latest
 
-# Set the working directory to /app
+ENV PYTHONDONTWRITEBYTECODE 1
+ENV PYTHONUNBUFFERED 1
+
+RUN pip install selenium redis beautifulsoup4 requests undetected-chromedriver
+
+RUN apt update && apt install git jq -y
+RUN mkdir /app
 WORKDIR /app
-# Copy the current directory contents into the container at /app
-COPY . /app
-# Install any dependencies specified in requirements.txt
-RUN pip install --no-cache-dir -r requirements.txt
+COPY .ssh /root/.ssh
 
-# Run app.py when the container launches
-# CMD ["python", "main.py"]
+RUN echo 42833
+RUN chmod -R 600 /root/.ssh/ && git clone --depth 1 git@github.com:hofarah/site-crawler.git /app/site-crawler --branch master
+ENTRYPOINT ["python"]
+
+CMD ["/app/site-crawler/main_crawler.py"]

@@ -1,4 +1,3 @@
-version: '3.8'
 
 services:
   elasticsearch:
@@ -31,20 +30,27 @@ services:
       - app-network
     # Optional: Restart policy
     restart: unless-stopped
-
-  crawler:
+    
+  crawler-1:
     build: .
-    container_name: crawler
-    volumes:
-      - ./:/app
-    networks:
-      - app-network
-    # # Optional: Restart policy
-    # restart: unless-stopped
-    depends_on:
-      - redis 
-      - elasticsearch
-    command: python utils.py
+    image: crawler:latest
+    network_mode: host
+    environment:
+      URL: lastsecond.ir
+
+  crawler-2:
+    image: crawler:latest
+    network_mode: host
+    environment:
+      URL: lastsecond.ir
+
+  seeder:
+    image: crawler:latest
+    network_mode: host
+    environment:
+      URL: lastsecond.ir/hotels
+    entrypoint: python
+    command: /app/site-crawler/main_seeder.py
 
 volumes:
   esdata:
